@@ -22,7 +22,6 @@ func NewCache(cache ICache, config *CacheConfig) *Cache {
 	return &Cache{Cache: cache, Config: config, lock: sync.Mutex{}}
 }
 
-// CacheConfig 缓存配置项
 type CacheConfig struct {
 	// TTL 过期时间，如果有使用，可以设置，不使用可以为空。
 	// 如果需要使用，但没有设置，会默认使用10s过期时间
@@ -30,20 +29,46 @@ type CacheConfig struct {
 	// MaxEntries 最大缓存数
 	MaxEntries int
 	// Callbacks 当缓存出现修改时，可执行的回调方法
-	Callbacks ChangeCallbacks
+	Callbacks ChangeCallbackHandler
 }
 
-func NewCacheConfig(TTL time.Duration, maxEntries int, callbacks ChangeCallbacks) *CacheConfig {
+func NewCacheConfig(TTL time.Duration, maxEntries int, callbacks ChangeCallbackHandler) *CacheConfig {
 	return &CacheConfig{TTL: TTL, MaxEntries: maxEntries, Callbacks: callbacks}
 }
 
-type ChangeCallbacks struct {
+// ChangeCallbackHandler 回调接口，可提供用户实现相应方法
+type ChangeCallbackHandler interface {
+	OnAdd()
+	OnGet()
+	OnRemove()
+}
+
+// ChangeCallbackFunc 回调方法
+type ChangeCallbackFunc struct {
 	// OnAdd 加入缓存时，可执行的回调
-	OnAdd func()
+	AddFunc func()
 	// OnGet 获取缓存时，可执行的回调
-	OnGet func()
+	GetFunc func()
 	// OnRemove 删除缓存时，可执行的回调
-	OnRemove func()
+	RemoveFunc func()
+}
+
+func (c ChangeCallbackFunc) OnAdd() {
+	if c.AddFunc != nil {
+		c.AddFunc()
+	}
+}
+
+func (c ChangeCallbackFunc) OnGet() {
+	if c.GetFunc != nil {
+		c.GetFunc()
+	}
+}
+
+func (c ChangeCallbackFunc) OnRemove() {
+	if c.RemoveFunc != nil {
+		c.RemoveFunc()
+	}
 }
 
 type Key interface{}

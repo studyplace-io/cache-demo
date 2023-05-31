@@ -8,16 +8,32 @@ import (
 	"time"
 )
 
+type callbackExample struct{}
+
+func (a callbackExample) OnAdd() {
+	fmt.Println("entry add...")
+}
+
+func (a callbackExample) OnGet() {
+	fmt.Println("entry get...")
+}
+
+func (a callbackExample) OnRemove() {
+	fmt.Println("entry delete...")
+}
+
+var _ cache.ChangeCallbackHandler = callbackExample{}
+
 func TestLRUCache(t *testing.T) {
 
-	config := cache.NewCacheConfig(0, 20, cache.ChangeCallbacks{
-		OnAdd: func() {
+	config := cache.NewCacheConfig(0, 20, cache.ChangeCallbackFunc{
+		AddFunc: func() {
 			fmt.Println("entry add...")
 		},
-		OnGet: func() {
+		GetFunc: func() {
 			fmt.Println("entry get...")
 		},
-		OnRemove: func() {
+		RemoveFunc: func() {
 			fmt.Println("entry delete...")
 		},
 	})
@@ -51,17 +67,7 @@ func TestLRUCache(t *testing.T) {
 }
 
 func TestLRUWithTTLCache(t *testing.T) {
-	config := cache.NewCacheConfig(4, 20, cache.ChangeCallbacks{
-		OnAdd: func() {
-			fmt.Println("entry add...")
-		},
-		OnGet: func() {
-			fmt.Println("entry get...")
-		},
-		OnRemove: func() {
-			fmt.Println("entry delete...")
-		},
-	})
+	config := cache.NewCacheConfig(4, 20, callbackExample{})
 
 	lruWithTTLCache := cache.NewCache(config.LRUWithTTLCacheMode(), config)
 
@@ -87,14 +93,14 @@ func TestLRUWithTTLCache(t *testing.T) {
 }
 
 func TestTTLCache(t *testing.T) {
-	config := cache.NewCacheConfig(time.Duration(10), 20, cache.ChangeCallbacks{
-		OnAdd: func() {
+	config := cache.NewCacheConfig(time.Duration(10), 20, cache.ChangeCallbackFunc{
+		AddFunc: func() {
 			fmt.Println("entry add...")
 		},
-		OnGet: func() {
+		GetFunc: func() {
 			fmt.Println("entry get...")
 		},
-		OnRemove: func() {
+		RemoveFunc: func() {
 			fmt.Println("entry delete...")
 		},
 	})
